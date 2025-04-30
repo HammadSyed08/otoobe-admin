@@ -1,9 +1,16 @@
-import type { Metadata } from "next"
-import { Search, Plus, MoreHorizontal, Pencil, Trash2, Eye } from "lucide-react"
-import Image from "next/image"
+import type { Metadata } from "next";
+import {
+  Search,
+  Plus,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+  Eye,
+} from "lucide-react";
+import Image from "next/image";
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,14 +18,15 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Events | Admin Panel",
   description: "Manage events",
-}
+};
 
 const events = {
   upcoming: [
@@ -91,14 +99,16 @@ const events = {
       attendees: 900,
     },
   ],
-}
+};
 
 export default function EventsPage() {
   return (
     <div className="flex flex-col gap-6 p-6">
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-bold tracking-tight">Events</h1>
-        <p className="text-gray-400">Create and manage events on your platform.</p>
+        <p className="text-gray-400">
+          Create and manage events on your platform.
+        </p>
       </div>
 
       <div className="flex items-center justify-between">
@@ -110,17 +120,25 @@ export default function EventsPage() {
             className="w-full border-gray-800 bg-gray-900 pl-8 text-white placeholder:text-gray-500"
           />
         </div>
-        <Button className="ml-auto bg-gray-100 text-black hover:bg-white">
-          <Plus className="mr-2 h-4 w-4" /> Create Event
-        </Button>
+        <Link href="/events/create">
+          <Button className="ml-autoe">
+            <Plus className="mr-2 h-4 w-4" /> Create Event
+          </Button>
+        </Link>
       </div>
 
       <Tabs defaultValue="upcoming" className="w-full">
         <TabsList className="grid w-full grid-cols-3 bg-gray-900">
-          <TabsTrigger value="upcoming" className="data-[state=active]:bg-gray-800">
+          <TabsTrigger
+            value="upcoming"
+            className="data-[state=active]:bg-gray-800"
+          >
             Upcoming
           </TabsTrigger>
-          <TabsTrigger value="ongoing" className="data-[state=active]:bg-gray-800">
+          <TabsTrigger
+            value="ongoing"
+            className="data-[state=active]:bg-gray-800"
+          >
             Ongoing
           </TabsTrigger>
           <TabsTrigger value="past" className="data-[state=active]:bg-gray-800">
@@ -150,21 +168,31 @@ export default function EventsPage() {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }
 
 function EventCard({ event }: { event: any }) {
   return (
     <Card className="overflow-hidden border-gray-800 bg-gray-900">
       <div className="relative h-48 w-full">
-        <Image src={event.image || "/placeholder.svg"} alt={event.name} fill className="object-cover" priority />
+        <Image
+          src={event.image || "/placeholder.svg"}
+          alt={event.name}
+          fill
+          className="object-cover"
+          priority
+        />
       </div>
       <CardContent className="p-4">
         <div className="mb-2 flex items-center justify-between">
           <h3 className="font-semibold text-white">{event.name}</h3>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="text-gray-400 hover:text-white">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-gray-400 hover:text-white"
+              >
                 <MoreHorizontal className="h-4 w-4" />
                 <span className="sr-only">Actions</span>
               </Button>
@@ -191,5 +219,5 @@ function EventCard({ event }: { event: any }) {
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

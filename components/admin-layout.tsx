@@ -232,8 +232,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           </div>
         </header>
 
-        {/* Page Content */}
-        <main className="flex-1">{children}</main>
+        <main className="flex-1 inset-0 bg-[radial-gradient(#4b4b4b33_1px,transparent_1px)] [background-size:20px_20px] bg-[#121212]">
+          {children}
+        </main>
       </div>
     </div>
   );
