@@ -1,345 +1,324 @@
 "use client";
+
 import { useState } from "react";
-import { Plus, Pencil, Trash2, Upload } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Loader2 } from "lucide-react";
+import { Timestamp } from "firebase/firestore";
+import { eventService } from "../services";
+import { useAuth } from "@/lib/auth-context";
+import eventCategories from "@/data/categories.json";
+import { useRouter } from "next/navigation";
 
-const initialEvents = [
-  // Example event
-];
+export default function CreateEventPage() {
+  const { toast } = useToast();
+  const { user } = useAuth();
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
-const initialCategories = [
-  { id: "1", name: "Conference" },
-  { id: "2", name: "Workshop" },
-  { id: "3", name: "Festival" },
-];
-
-export default function EventFormPage() {
-  const [events, setEvents] = useState(initialEvents);
-  const [categories, setCategories] = useState(initialCategories);
-  const [form, setForm] = useState({
-    id: "",
-    img: "",
+  const [formData, setFormData] = useState({
     title: "",
     description: "",
     date: "",
+    startTime: "",
+    endTime: "",
+    city: "",
+    country: "",
+    price: "",
+    currency: "",
+    ticketLink: "",
+    moreInfoLink: "",
     category: "",
-    timeFrom: "",
-    timeTo: "",
-    location: "",
-    ticketUrl: "",
-    infoUrl: "",
+    subCategory: "",
   });
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [imgPreview, setImgPreview] = useState<string>("");
 
-  const handleInput = (e: any) => {
+  const [imageFile, setImageFile] = useState<File | null>(null);
+
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
     const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
-  };
 
-  const handleImage = (e: any) => {
-    const file = e.target.files[0];
-    if (file) {
-      setForm({ ...form, img: file });
-      setImgPreview(URL.createObjectURL(file));
-    }
-  };
-
-  const handleSubmit = (e: any) => {
-    e.preventDefault();
-    if (!form.title || !form.date || !form.category) return;
-    if (editingId) {
-      setEvents(
-        events.map((ev) =>
-          ev.id === editingId
-            ? { ...form, id: editingId, img: imgPreview || form.img }
-            : ev
-        )
-      );
-      setEditingId(null);
+    // Reset subCategory if category changes
+    if (name === "category") {
+      setFormData({ ...formData, [name]: value, subCategory: "" });
     } else {
-      setEvents([
-        ...events,
-        { ...form, id: Date.now().toString(), img: imgPreview || form.img },
-      ]);
-    }
-    setForm({
-      id: "",
-      img: "",
-      title: "",
-      description: "",
-      date: "",
-      category: "",
-      timeFrom: "",
-      timeTo: "",
-      location: "",
-      ticketUrl: "",
-      infoUrl: "",
-    });
-    setImgPreview("");
-  };
-
-  const handleEdit = (id: string) => {
-    const ev = events.find((ev) => ev.id === id);
-    if (ev) {
-      setForm(ev);
-      setEditingId(id);
-      setImgPreview(typeof ev.img === "string" ? ev.img : "");
+      setFormData({ ...formData, [name]: value });
     }
   };
 
-  const handleDelete = (id: string) => {
-    setEvents(events.filter((ev) => ev.id !== id));
-    if (editingId === id) {
-      setEditingId(null);
-      setForm({
-        id: "",
-        img: "",
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setImageFile(e.target.files[0]);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const {
+        title,
+        description,
+        date,
+        startTime,
+        endTime,
+        city,
+        country,
+        price,
+        currency,
+        ticketLink,
+        moreInfoLink,
+        category,
+        subCategory,
+      } = formData;
+
+      const eventData = {
+        title,
+        description,
+        date: Timestamp.fromDate(new Date(date)),
+        time: {
+          startTime,
+          endTime,
+          timeStamp: Timestamp.now(),
+        },
+        location: {
+          city,
+          country,
+          latitude: 29.3737609, // placeholder for now
+          longitude: 71.761516, // placeholder for now
+        },
+        price: {
+          amount: price,
+          currency,
+        },
+        ticketLink,
+        moreInfoLink,
+        createdBy: user?.email || "unknown",
+        category: [
+          {
+            title: category,
+            subCategories: [subCategory],
+          },
+        ],
+      };
+
+      const docId = await eventService.createEvent(eventData, imageFile);
+
+      toast({
+        title: "Event Created!",
+        description: `Event ID: ${docId}`,
+      });
+
+      setFormData({
         title: "",
         description: "",
         date: "",
+        startTime: "",
+        endTime: "",
+        city: "",
+        country: "",
+        price: "",
+        currency: "",
+        ticketLink: "",
+        moreInfoLink: "",
         category: "",
-        timeFrom: "",
-        timeTo: "",
-        location: "",
-        ticketUrl: "",
-        infoUrl: "",
+        subCategory: "",
       });
-      setImgPreview("");
+      setImageFile(null);
+      router.push("/events");
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create event.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col gap-6 p-6">
-      <h1 className="text-2xl font-bold tracking-tight">Event Management</h1>
-      <form className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
-        <div className="flex flex-col gap-2">
-          <label className="text-white">Image</label>
-          <div className="flex items-center gap-2">
-            <Input type="file" accept="image/*" onChange={handleImage} />
-            {imgPreview && (
-              <img
-                src={imgPreview}
-                alt="preview"
-                className="h-16 w-24 object-cover rounded"
-              />
-            )}
+    <Card className="max-w-4xl mx-auto my-10 bg-gray-950 shadow-md">
+      <CardContent className="p-6 space-y-6">
+        <h2 className="text-2xl font-semibold text-gray-800">
+          Create New Event
+        </h2>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <Label>Title</Label>
+            <Input
+              name="title"
+              value={formData.title}
+              onChange={handleChange}
+              placeholder="Enter event title"
+              required
+            />
           </div>
-        </div>
-        <div className="flex flex-col gap-2">
-          <label className="text-white">Title</label>
-          <Input
-            name="title"
-            value={form.title}
-            onChange={handleInput}
-            required
-            placeholder="e.g. Summer Music Festival"
-          />
-        </div>
-        <div className="flex flex-col gap-2 md:col-span-2">
-          <label className="text-white">Description</label>
-          <Textarea
-            name="description"
-            value={form.description}
-            onChange={handleInput}
-            placeholder="Describe the event, guests, highlights, etc."
-          />
-        </div>
-        <div className="flex flex-col gap-2">
-          <label className="text-white">Date</label>
-          <Input
-            type="date"
-            name="date"
-            value={form.date}
-            onChange={handleInput}
-            required
-            placeholder="Select event date"
-          />
-        </div>
-        <div className="flex flex-col gap-2">
-          <label className="text-white">Category</label>
-          <Select
-            value={form.category}
-            onValueChange={(value) => setForm({ ...form, category: value })}
-          >
-            <SelectTrigger className="w-full border border-gray-800 rounded px-2 py-2 bg-transparent text-white">
-              <SelectValue placeholder="Select category (e.g. Conference)" />
-            </SelectTrigger>
-            <SelectContent className="bg-gray-900 text-white">
-              {categories.map((cat) => (
-                <SelectItem key={cat.id} value={cat.name}>
-                  {cat.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex flex-col gap-2">
-          <label className="text-white">Time (From)</label>
-          <Input
-            type="time"
-            name="timeFrom"
-            value={form.timeFrom}
-            onChange={handleInput}
-            placeholder="Start time (e.g. 09:00)"
-          />
-        </div>
-        <div className="flex flex-col gap-2">
-          <label className="text-white">Time (To)</label>
-          <Input
-            type="time"
-            name="timeTo"
-            value={form.timeTo}
-            onChange={handleInput}
-            placeholder="End time (e.g. 17:00)"
-          />
-        </div>
-        <div className="flex flex-col gap-2 md:col-span-2">
-          <label className="text-white">Location</label>
-          <Input name="location" value={form.location} onChange={handleInput} placeholder="e.g. Central Park, NY" />
-        </div>
-        <div className="flex flex-col gap-2">
-          <label className="text-white">Ticket Buy (URL)</label>
-          <Input
-            name="ticketUrl"
-            value={form.ticketUrl}
-            onChange={handleInput}
-            type="url"
-            placeholder="https://tickets.example.com/event"
-          />
-        </div>
-        <div className="flex flex-col gap-2">
-          <label className="text-white">Event Info (URL)</label>
-          <Input
-            name="infoUrl"
-            value={form.infoUrl}
-            onChange={handleInput}
-            type="url"
-            placeholder="https://eventinfo.example.com"
-          />
-        </div>
-        <div className="md:col-span-2 flex gap-2">
-          <Button type="submit">
-            {editingId ? (
-              <>
-                <Pencil className="mr-2 h-4 w-4" /> Update Event
-              </>
+          <div>
+            <Label>Description</Label>
+            <Textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              placeholder="Enter event description"
+              required
+            />
+          </div>
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <Label>Date</Label>
+              <Input
+                type="date"
+                name="date"
+                value={formData.date}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="flex-1">
+              <Label>Start Time</Label>
+              <Input
+                type="time"
+                name="startTime"
+                value={formData.startTime}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="flex-1">
+              <Label>End Time</Label>
+              <Input
+                type="time"
+                name="endTime"
+                value={formData.endTime}
+                onChange={handleChange}
+                required
+              />
+            </div>
+          </div>
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <Label>City</Label>
+              <Input
+                name="city"
+                value={formData.city}
+                onChange={handleChange}
+                placeholder="Enter city"
+                required
+              />
+            </div>
+            <div className="flex-1">
+              <Label>Country</Label>
+              <Input
+                name="country"
+                value={formData.country}
+                onChange={handleChange}
+                placeholder="Enter country"
+                required
+              />
+            </div>
+          </div>
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <Label>Price</Label>
+              <Input
+                name="price"
+                value={formData.price}
+                onChange={handleChange}
+                placeholder="Enter price"
+                required
+              />
+            </div>
+            <div className="flex-1">
+              <Label>Currency</Label>
+              <Input
+                name="currency"
+                value={formData.currency}
+                onChange={handleChange}
+                placeholder="Enter currency (e.g., USD)"
+                required
+              />
+            </div>
+          </div>
+          <div>
+            <Label>Ticket Link</Label>
+            <Input
+              name="ticketLink"
+              value={formData.ticketLink}
+              onChange={handleChange}
+              placeholder="Enter ticket link (optional)"
+            />
+          </div>
+          <div>
+            <Label>More Info Link</Label>
+            <Input
+              name="moreInfoLink"
+              value={formData.moreInfoLink}
+              onChange={handleChange}
+              placeholder="Enter more info link (optional)"
+            />
+          </div>
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <Label>Category</Label>
+              <select
+                name="category"
+                value={formData.category}
+                onChange={handleChange}
+                className="w-full border rounded px-3 py-2 "
+              >
+                <option value="">Select category</option>
+                {Object.keys(eventCategories.categories).map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex-1">
+              <Label>Subcategory</Label>
+              <select
+                name="subCategory"
+                value={formData.subCategory}
+                onChange={handleChange}
+                className="w-full border rounded px-3 py-2 "
+              >
+                <option value="">Select subcategory</option>
+                {formData.category &&
+                  eventCategories.categories[formData.category]?.map((sub) => (
+                    <option key={sub} value={sub}>
+                      {sub}
+                    </option>
+                  ))}
+              </select>
+            </div>
+          </div>
+          <div>
+            <Label>Event Image</Label>
+            <Input
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="text-gray-700"
+            />
+          </div>
+          <Button type="submit" disabled={loading} className="w-full ">
+            {loading ? (
+              <Loader2 className="animate-spin w-4 h-4" />
             ) : (
-              <>
-                <Plus className="mr-2 h-4 w-4" /> Add Event
-              </>
+              "Create Event"
             )}
           </Button>
-          {editingId && (
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => {
-                setEditingId(null);
-                setForm({
-                  id: "",
-                  img: "",
-                  title: "",
-                  description: "",
-                  date: "",
-                  category: "",
-                  timeFrom: "",
-                  timeTo: "",
-                  location: "",
-                  ticketUrl: "",
-                  infoUrl: "",
-                });
-                setImgPreview("");
-              }}
-            >
-              Cancel
-            </Button>
-          )}
-        </div>
-      </form>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {events.map((ev) => (
-          <Card
-            key={ev.id}
-            className="overflow-hidden border-gray-800 bg-gray-900"
-          >
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-2">
-                {ev.img && (
-                  <img
-                    src={
-                      typeof ev.img === "string"
-                        ? ev.img
-                        : URL.createObjectURL(ev.img)
-                    }
-                    alt={ev.title}
-                    className="h-12 w-20 object-cover rounded"
-                  />
-                )}
-                <div>
-                  <div className="font-semibold text-white">{ev.title}</div>
-                  <div className="text-gray-400 text-xs">
-                    {ev.date} | {ev.timeFrom} - {ev.timeTo}
-                  </div>
-                  <div className="text-gray-400 text-xs">{ev.category}</div>
-                </div>
-              </div>
-              <div className="text-gray-400 text-sm mb-2">{ev.description}</div>
-              <div className="text-gray-400 text-xs mb-2">
-                Location: {ev.location}
-              </div>
-              <div className="flex gap-2">
-                {ev.ticketUrl && (
-                  <a
-                    href={ev.ticketUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline text-blue-400 text-xs"
-                  >
-                    Buy Ticket
-                  </a>
-                )}
-                {ev.infoUrl && (
-                  <a
-                    href={ev.infoUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline text-green-400 text-xs"
-                  >
-                    Event Info
-                  </a>
-                )}
-              </div>
-              <div className="flex gap-2 mt-2">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => handleEdit(ev.id)}
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => handleDelete(ev.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 }

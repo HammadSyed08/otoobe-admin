@@ -1,0 +1,119 @@
+{
+  "categories": {
+    "Music": [
+      "Disco",
+      "Folk",
+      "Jazz + Blues",
+      "Pop",
+      "RBNB + Soul",
+      "Rock",
+      "Classic",
+      "Country",
+      "Electronic",
+      "Hard + Heavy",
+      "Latin + salsa",
+      "Rap + Hip Hop",
+      "Other music"
+    ],
+    "Shows": [
+      "Circus",
+      "Theater",
+      "Ballet",
+      "Cabaret + Comedy",
+      "Dance",
+      "Opera",
+      "Poetry",
+      "Other shows"
+    ],
+    "Culture": [
+      "Architecture",
+      "Art festival",
+      "History",
+      "Modern art",
+      "Photography",
+      "Sculpture",
+      "Other culture"
+    ],
+    "Markets and Fairs": [
+      "Carneval",
+      "Christmas market",
+      "City festivals",
+      "Farmers + weekly markets",
+      "Flea market",
+      "Garden expositions",
+      "Other markets and fairs"
+    ],
+    "Lifestyle": [
+      "Fashion",
+      "Sexy",
+      "Singles",
+      "Children + Family",
+      "Congress + Conferences",
+      "Food + Drink",
+      "Health + Fitness",
+      "Open days",
+      "Political",
+      "Science + Technologie",
+      "Other lifestyle"
+    ],
+    "Cinema": [
+      "Action",
+      "Horror",
+      "Comedys",
+      "Fantasie + Science fiction",
+      "Film festivals",
+      "Independant",
+      "Original language",
+      "Other cinema"
+    ],
+    "Shopping": [
+      "Clothes",
+      "Food + Drink",
+      "House + furniture",
+      "Other shopping"
+    ],
+    "Bars + Restaurants": [
+      "Drinks + Tapas",
+      "Italien",
+      "Asiatic",
+      "Fine dining",
+      "Fish + Sea food",
+      "French",
+      "Irish pubs",
+      "Live music",
+      "Local food",
+      "Other"
+    ],
+    "Ball Sports": [
+      "Golf",
+      "Handball",
+      "Rugby",
+      "Volley",
+      "American Football",
+      "Basket ball",
+      "Cricket",
+      "Hockey + Ice hockey",
+      "Paddle ball",
+      "Pickle ball",
+      "Soccer",
+      "Tennis + Table Tennis",
+      "Other ball sports"
+    ],
+    "Other Sports": [
+      "Marathon + Triathlon",
+      "Yoga, Tai Chi..",
+      "Biking",
+      "Dance sport",
+      "Gymnastic",
+      "Martial art",
+      "Motor sport",
+      "Outdoor",
+      "Sailing",
+      "Skating",
+      "Skiing",
+      "Water sports",
+      "Other Sports"
+    ],
+    "Spirituel": ["Buddhist", "Christian", "Islam", "Jewish", "Other spiritual"]
+  }
+}

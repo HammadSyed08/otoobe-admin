@@ -1,12 +1,5 @@
-import type { Metadata } from "next";
-import {
-  Search,
-  Plus,
-  MoreHorizontal,
-  Pencil,
-  Trash2,
-  Eye,
-} from "lucide-react";
+"use client";
+import { Search, Plus } from "lucide-react";
 import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
@@ -19,89 +12,53 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Eye,
+  Pencil,
+  Trash2,
+  MoreHorizontal,
+  Calendar,
+  Clock,
+  MapPin,
+  BadgeDollarSign,
+  User,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Link from "next/link";
-
-export const metadata: Metadata = {
-  title: "Events | Admin Panel",
-  description: "Manage events",
-};
-
-const events = {
-  upcoming: [
-    {
-      id: "1",
-      name: "Tech Conference 2025",
-      date: "May 15, 2025",
-      location: "San Francisco, CA",
-      image: "/placeholder.svg?height=200&width=400",
-      attendees: 450,
-    },
-    {
-      id: "2",
-      name: "Summer Music Festival",
-      date: "June 10, 2025",
-      location: "Austin, TX",
-      image: "/placeholder.svg?height=200&width=400",
-      attendees: 1200,
-    },
-    {
-      id: "3",
-      name: "Startup Pitch Competition",
-      date: "July 5, 2025",
-      location: "New York, NY",
-      image: "/placeholder.svg?height=200&width=400",
-      attendees: 300,
-    },
-  ],
-  ongoing: [
-    {
-      id: "4",
-      name: "Design Workshop",
-      date: "April 28, 2025",
-      location: "Chicago, IL",
-      image: "/placeholder.svg?height=200&width=400",
-      attendees: 75,
-    },
-    {
-      id: "5",
-      name: "Virtual Career Fair",
-      date: "April 29, 2025",
-      location: "Online",
-      image: "/placeholder.svg?height=200&width=400",
-      attendees: 620,
-    },
-  ],
-  past: [
-    {
-      id: "6",
-      name: "Charity Gala",
-      date: "April 20, 2025",
-      location: "Los Angeles, CA",
-      image: "/placeholder.svg?height=200&width=400",
-      attendees: 350,
-    },
-    {
-      id: "7",
-      name: "Product Launch",
-      date: "April 15, 2025",
-      location: "Seattle, WA",
-      image: "/placeholder.svg?height=200&width=400",
-      attendees: 280,
-    },
-    {
-      id: "8",
-      name: "Annual Conference",
-      date: "March 25, 2025",
-      location: "Miami, FL",
-      image: "/placeholder.svg?height=200&width=400",
-      attendees: 900,
-    },
-  ],
-};
+import { useEffect, useState } from "react";
+import { format } from "date-fns";
+import { eventService } from "./services";
+import Loader from "@/components/Loader";
+import { Timestamp } from "firebase/firestore";
 
 export default function EventsPage() {
+  const [events, setEvents] = useState<Event[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      setIsLoading(true);
+      try {
+        const response = await eventService.getEvents();
+        setEvents(response);
+      } catch (error) {
+        console.error("Error fetching events:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchEvents();
+  }, []);
+  console.log(events);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen lg:p-40 p-20">
+        <Loader />
+      </div>
+    );
+  }
   return (
     <div className="flex flex-col gap-6 p-6">
       <div className="flex flex-col gap-2">
@@ -126,98 +83,204 @@ export default function EventsPage() {
           </Button>
         </Link>
       </div>
-
-      <Tabs defaultValue="upcoming" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 bg-gray-900">
-          <TabsTrigger
-            value="upcoming"
-            className="data-[state=active]:bg-gray-800"
-          >
-            Upcoming
-          </TabsTrigger>
-          <TabsTrigger
-            value="ongoing"
-            className="data-[state=active]:bg-gray-800"
-          >
-            Ongoing
-          </TabsTrigger>
-          <TabsTrigger value="past" className="data-[state=active]:bg-gray-800">
-            Past
-          </TabsTrigger>
-        </TabsList>
-        <TabsContent value="upcoming" className="mt-6">
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {events.upcoming.map((event) => (
-              <EventCard key={event.id} event={event} />
-            ))}
-          </div>
-        </TabsContent>
-        <TabsContent value="ongoing" className="mt-6">
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {events.ongoing.map((event) => (
-              <EventCard key={event.id} event={event} />
-            ))}
-          </div>
-        </TabsContent>
-        <TabsContent value="past" className="mt-6">
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {events.past.map((event) => (
-              <EventCard key={event.id} event={event} />
-            ))}
-          </div>
-        </TabsContent>
-      </Tabs>
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {events.map((event) => (
+          <EventCard key={event.id} event={event} />
+        ))}
+      </div>
     </div>
   );
 }
 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useRouter } from "next/navigation";
+
 function EventCard({ event }: { event: any }) {
+  const router = useRouter();
+  const [showDetails, setShowDetails] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const formattedDate = event.date?.seconds
+    ? format(
+        new Timestamp(event.date.seconds, event.date.nanoseconds).toDate(),
+        "PPP"
+      )
+    : "No Date";
+
+  const handleDelete = async () => {
+    try {
+      setIsDeleting(true);
+      await eventService.deleteEvent(event.id, event.imageUrl);
+      window.location.reload();
+    } catch (error) {
+      console.error("Error deleting event:", error);
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteDialog(false);
+    }
+  };
+
   return (
-    <Card className="overflow-hidden border-gray-800 bg-gray-900">
-      <div className="relative h-48 w-full">
-        <Image
-          src={event.image || "/placeholder.svg"}
-          alt={event.name}
-          fill
-          className="object-cover"
-          priority
-        />
-      </div>
-      <CardContent className="p-4">
-        <div className="mb-2 flex items-center justify-between">
-          <h3 className="font-semibold text-white">{event.name}</h3>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-gray-400 hover:text-white"
+    <>
+      <Card>
+        <div className="relative h-48 w-full">
+          <Image
+            src={event.images?.[0] || "/placeholder.svg"}
+            alt={event.title}
+            fill
+            className="object-cover rounded-t-lg"
+            priority
+          />
+        </div>
+        <CardContent className="p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold truncate">{event.title}</h3>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-zinc-400 hover:text-white"
+                >
+                  <MoreHorizontal className="h-5 w-5" />
+                  <span className="sr-only">Actions</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="bg-zinc-800 border border-zinc-700 text-zinc-100"
               >
-                <MoreHorizontal className="h-4 w-4" />
-                <span className="sr-only">Actions</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-gray-900 text-white">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuSeparator className="bg-gray-800" />
-              <DropdownMenuItem className="flex items-center gap-2 hover:bg-gray-800">
-                <Eye className="h-4 w-4" /> View Details
-              </DropdownMenuItem>
-              <DropdownMenuItem className="flex items-center gap-2 hover:bg-gray-800">
-                <Pencil className="h-4 w-4" /> Edit Event
-              </DropdownMenuItem>
-              <DropdownMenuItem className="flex items-center gap-2 hover:bg-gray-800">
-                <Trash2 className="h-4 w-4" /> Delete Event
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-        <div className="space-y-1 text-sm text-gray-400">
-          <div>{event.date}</div>
-          <div>{event.location}</div>
-          <div>{event.attendees} attendees</div>
-        </div>
-      </CardContent>
-    </Card>
+                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuSeparator className="bg-zinc-700" />
+                <DropdownMenuItem
+                  className="gap-2 hover:bg-zinc-700"
+                  onClick={() => setShowDetails(true)}
+                >
+                  <Eye className="h-4 w-4" /> View Details
+                </DropdownMenuItem>
+                {/* <DropdownMenuItem
+                  className="gap-2 hover:bg-zinc-700"
+                  onClick={() => router.push(`/events/edit/${event.id}`)}
+                >
+                  <Pencil className="h-4 w-4" /> Edit Event
+                </DropdownMenuItem> */}
+                <DropdownMenuItem
+                  className="gap-2 hover:bg-zinc-700 text-red-500"
+                  onClick={() => setShowDeleteDialog(true)}
+                >
+                  <Trash2 className="h-4 w-4" /> Delete Event
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          <div className="space-y-2 text-sm text-zinc-400">
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-zinc-500" />
+              <span>{formattedDate}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-zinc-500" />
+              <span>
+                {event.time?.startTime} - {event.time?.endTime}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-zinc-500" />
+              <span>
+                {event.location?.city}, {event.location?.country}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <BadgeDollarSign className="h-4 w-4 text-zinc-500" />
+              <span>
+                {event.price?.amount} {event.price?.currency}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <User className="h-4 w-4 text-zinc-500" />
+              <span>{event.createdBy}</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Dialog open={showDetails} onOpenChange={setShowDetails}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>{event.title}</DialogTitle>
+            <DialogDescription className="space-y-4">
+              <div className="space-y-2">
+                <p className="text-sm font-semibold">Description</p>
+                <p className="text-sm text-gray-500">{event.description}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm font-semibold">Date</p>
+                  <p className="text-sm text-gray-500">{formattedDate}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold">Time</p>
+                  <p className="text-sm text-gray-500">
+                    {event.time?.startTime} - {event.time?.endTime}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold">Location</p>
+                  <p className="text-sm text-gray-500">
+                    {event.location?.city}, {event.location?.country}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold">Price</p>
+                  <p className="text-sm text-gray-500">
+                    {event.price?.amount} {event.price?.currency}
+                  </p>
+                </div>
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the
+              event and remove the data from the server.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

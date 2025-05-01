@@ -1,17 +1,6 @@
 "use client";
-import type { Metadata } from "next";
-import { Search, MoreHorizontal, Check, Ban, Shield } from "lucide-react";
-
+import { Search } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -21,25 +10,66 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { getAllUsers } from "./serices";
+import Loader from "@/components/Loader";
+import debounce from "lodash/debounce";
 
 export default function UsersPage() {
   const [users, setUsers] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const debouncedSearch = debounce((query) => {
+    setSearchQuery(query);
+  }, 300);
+
   const fetchUsers = async () => {
+    setIsLoading(true);
     try {
       const response = await getAllUsers();
       const data = await response;
       setUsers(data as any[]);
     } catch (error) {
       console.error("Error fetching users:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
     fetchUsers();
   }, []);
-  console.log(users);
+
+  const filteredUsers = users.filter((user) => {
+    const searchLower = searchQuery.toLowerCase().trim();
+    if (!searchLower) return true;
+
+    const fullNameMatch = user.fullName.toLowerCase().includes(searchLower);
+    const emailMatch = user.email.toLowerCase().includes(searchLower);
+    const organizationMatch = user.organizationName
+      .toLowerCase()
+      .includes(searchLower);
+    const locationMatch = [
+      user.location.city,
+      user.location.state,
+      user.location.country,
+    ]
+      .join(" ")
+      .toLowerCase()
+      .includes(searchLower);
+
+    return fullNameMatch || emailMatch || organizationMatch || locationMatch;
+  });
+
+  if (isLoading) {
+    return (
+      <div className="p-40 mx-auto">
+        <Loader />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-6 p-6">
       <div className="flex flex-col gap-2">
@@ -52,7 +82,9 @@ export default function UsersPage() {
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
           <Input
             type="search"
-            placeholder="Search users..."
+            placeholder="Search by name, email, organization, or location..."
+            value={searchQuery}
+            onChange={(e) => debouncedSearch(e.target.value)}
             className="w-full border-gray-800 bg-gray-900 pl-8 text-white placeholder:text-gray-500"
           />
         </div>
@@ -71,7 +103,7 @@ export default function UsersPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users.map((user) => (
+            {filteredUsers?.map((user) => (
               <TableRow
                 key={user.id}
                 className="border-gray-800 hover:bg-gray-900/50"
