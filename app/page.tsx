@@ -1,15 +1,54 @@
-import type { Metadata } from "next";
-import Link from "next/link";
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth-context";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-export const metadata: Metadata = {
-  title: "Access Terminal | OTOOBE Core",
-  description: "Secure entry to OTOOBE Admin Terminal",
-};
+import { Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const { login } = useAuth();
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!email || !password) {
+      toast({
+        variant: "destructive",
+        title: "Missing Fields",
+        description: "Please enter both email and password.",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await login(email, password);
+      toast({
+        title: "Login Successful",
+        description: "Redirecting to dashboard...",
+      });
+      router.push("/dashboard");
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Login Failed",
+        description: error?.message || "Invalid credentials or server error.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="relative flex h-screen w-full items-center justify-center overflow-hidden bg-black">
       {/* Subtle Grid Background */}
@@ -18,9 +57,11 @@ export default function LoginPage() {
       </div>
 
       {/* Terminal Login Card */}
-      <div className="relative z-20 w-full max-w-md space-y-8 rounded-xl border border-gray-800 bg-gray-900/80 p-10 shadow-[0_0_40px_#00000077] backdrop-blur-sm">
+      <form
+        onSubmit={handleSubmit}
+        className="relative z-20 w-full max-w-md space-y-8 rounded-xl border border-gray-800 bg-gray-900/80 p-10 shadow-[0_0_40px_#00000077] backdrop-blur-sm"
+      >
         <div className="flex flex-col items-center space-y-3 text-center">
-          {/* Gray Logo */}
           <div className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-gray-600 bg-gray-800 shadow-md">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -51,36 +92,46 @@ export default function LoginPage() {
             </Label>
             <Input
               id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               placeholder="admin@otoobe.system"
               type="email"
               autoCapitalize="none"
               autoComplete="email"
               autoCorrect="off"
               className="border border-gray-700 bg-gray-800 text-white placeholder:text-gray-500 focus-visible:ring-gray-500"
+              disabled={isLoading}
             />
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2 relative">
             <Label htmlFor="password" className="text-gray-300">
-              Pssword
+              Password
             </Label>
             <Input
               id="password"
-              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              type={showPassword ? "text" : "password"}
               placeholder="password"
-              className="border border-gray-700 bg-gray-800 text-white placeholder:text-gray-500 focus-visible:ring-gray-500"
+              className="border border-gray-700 bg-gray-800 text-white placeholder:text-gray-500 focus-visible:ring-gray-500 pr-10"
+              disabled={isLoading}
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              className="absolute right-3 top-[38px] text-gray-400 hover:text-gray-200"
+              tabIndex={-1}
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
           </div>
 
-          {/* Gray Button */}
-          <Button
-            asChild
-            className="w-full border border-gray-600 bg-gray-200 text-black font-semibold shadow hover:bg-white"
-          >
-            <Link href="/dashboard">LOGIN</Link>
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? "Signing in..." : "Sign In"}
           </Button>
         </div>
-      </div>
+      </form>
     </div>
   );
 }

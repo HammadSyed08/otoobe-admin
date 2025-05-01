@@ -4,7 +4,7 @@ import type React from "react";
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   BarChart3,
   Calendar,
@@ -27,6 +27,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useAuth } from "@/lib/auth-context";
+import { Router } from "next/router";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -34,6 +44,9 @@ interface AdminLayoutProps {
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+  const { logout } = useAuth();
+  const router = useRouter();
   const pathname = usePathname();
 
   const routes = [
@@ -118,13 +131,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               </ul>
             </nav>
             <div className="border-t border-gray-800 p-4">
-              <Link
-                href="/"
-                className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-gray-400 transition-colors hover:bg-gray-800 hover:text-white"
+              <button
+                onClick={() => setShowLogoutDialog(true)}
+                className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-gray-400 transition-colors hover:bg-gray-800 hover:text-white"
               >
                 <LogOut className="h-5 w-5" />
                 Logout
-              </Link>
+              </button>
             </div>
           </div>
         </SheetContent>
@@ -174,13 +187,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           </ul>
         </nav>
         <div className="border-t border-gray-800 p-4">
-          <Link
-            href="/"
-            className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-gray-400 transition-colors hover:bg-gray-800 hover:text-white"
+          <button
+            onClick={() => setShowLogoutDialog(true)}
+            className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-gray-400 transition-colors hover:bg-gray-800 hover:text-white"
           >
             <LogOut className="h-5 w-5" />
             Logout
-          </Link>
+          </button>
         </div>
       </div>
 
@@ -223,9 +236,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-gray-800" />
                 <DropdownMenuItem className="hover:bg-gray-800">
-                  <Link href="/" className="flex w-full items-center">
+                  <button
+                    onClick={() => setShowLogoutDialog(true)}
+                    className="flex w-full items-center"
+                  >
                     Logout
-                  </Link>
+                  </button>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -236,6 +252,41 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           {children}
         </main>
       </div>
+
+      {/* Logout Confirmation Dialog */}
+      <Dialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
+        <DialogContent className="bg-gray-900 text-white">
+          <DialogHeader>
+            <DialogTitle>Confirm Logout</DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Are you sure you want to logout from the admin panel?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              onClick={() => setShowLogoutDialog(false)}
+              className="hover:bg-gray-800"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={async () => {
+                try {
+                  await logout();
+                  setShowLogoutDialog(false);
+                  router.push("/");
+                } catch (error) {
+                  console.error("Logout failed:", error);
+                }
+              }}
+            >
+              Logout
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

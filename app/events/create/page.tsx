@@ -206,12 +206,7 @@ export default function EventFormPage() {
         </div>
         <div className="flex flex-col gap-2 md:col-span-2">
           <label className="text-white">Location</label>
-          <Input
-            name="location"
-            value={form.location}
-            onChange={handleInput}
-            placeholder="e.g. Central Park, NY"
-          />
+          <Input name="location" value={form.location} onChange={handleInput} placeholder="e.g. Central Park, NY" />
         </div>
         <div className="flex flex-col gap-2">
           <label className="text-white">Ticket Buy (URL)</label>
