@@ -4,10 +4,15 @@ import {
   MoreHorizontal,
   MessageSquare,
   CheckCircle,
-  Trash2,
 } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,124 +22,199 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { useEffect, useState } from "react";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, updateDoc, doc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import Loader from "@/components/Loader";
 
 export default function ReportsPage() {
   const [reports, setReports] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [isReplyModalOpen, setIsReplyModalOpen] = useState(false);
+  const [selectedReportId, setSelectedReportId] = useState(null);
+  const [selectedEntryIndex, setSelectedEntryIndex] = useState(null);
+  const [replyText, setReplyText] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchReports = async () => {
-      setIsLoading(true);
       try {
-        const collectionRef = collection(db, "Reports");
-        const querySnapshot = await getDocs(collectionRef);
-        const data = querySnapshot.docs.map((doc) => ({
+        setIsLoading(true);
+        const snapshot = await getDocs(collection(db, "Reports"));
+        const data = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
         setReports(data);
       } catch (error) {
         console.error("Error fetching reports:", error);
-        setError(error);
       } finally {
         setIsLoading(false);
       }
     };
-
     fetchReports();
   }, []);
-  console.log(reports);
+
+  const handleReply = (reportId: string, entryIndex: number) => {
+    setSelectedReportId(reportId);
+    setSelectedEntryIndex(entryIndex);
+    setIsReplyModalOpen(true);
+  };
+
+  const submitReply = async () => {
+    if (!selectedReportId || selectedEntryIndex === null) return;
+
+    const reportRef = doc(db, "Reports", selectedReportId);
+    const report = reports.find((r) => r.id === selectedReportId);
+
+    const updatedEntries = [...report.reportedBy];
+    updatedEntries[selectedEntryIndex].reply = replyText;
+
+    await updateDoc(reportRef, { reportedBy: updatedEntries });
+
+    setReports((prev) =>
+      prev.map((r) =>
+        r.id === selectedReportId ? { ...r, reportedBy: updatedEntries } : r
+      )
+    );
+
+    setReplyText("");
+    setIsReplyModalOpen(false);
+  };
+
+  const handleApprove = async (reportId: string, entryIndex: number) => {
+    const reportRef = doc(db, "Reports", reportId);
+    const report = reports.find((r) => r.id === reportId);
+
+    const updatedEntries = [...report.reportedBy];
+    updatedEntries[entryIndex].status = "approved";
+
+    await updateDoc(reportRef, { reportedBy: updatedEntries });
+
+    setReports((prev) =>
+      prev.map((r) =>
+        r.id === reportId ? { ...r, reportedBy: updatedEntries } : r
+      )
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center lg:p-40 p-20">
+        <Loader />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-6 p-6">
-      <div className="flex flex-col gap-2">
+      <div>
         <h1 className="text-2xl font-bold tracking-tight">Reports</h1>
-        <p className="text-gray-400">
+        <p className="text-muted-foreground">
           Manage and respond to user-submitted reports.
         </p>
       </div>
 
       <div className="flex items-center justify-between">
         <div className="relative w-full max-w-sm">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
             placeholder="Search reports..."
-            className="w-full border-gray-800 bg-gray-900 pl-8 text-white placeholder:text-gray-500"
+            className="w-full pl-8"
           />
         </div>
       </div>
 
-      <div className="rounded-md border border-gray-800">
+      <div className="rounded-md border">
         <Table>
-          <TableHeader className="bg-gray-900">
-            <TableRow className="border-gray-800 hover:bg-gray-900/80">
-              <TableHead className="text-gray-400">Email</TableHead>
-              <TableHead className="text-gray-400">Report</TableHead>
-              <TableHead className="text-gray-400">Date</TableHead>
-              <TableHead className="text-right text-gray-400">
-                Actions
-              </TableHead>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Email</TableHead>
+              <TableHead>Report</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Reply</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
-
           <TableBody>
-            {reports.map((report) => (
-              <TableRow
-                key={report.id}
-                className="border-gray-800 hover:bg-gray-900/50"
-              >
-                <TableCell className="text-white">{report.email}</TableCell>
-                <TableCell className="text-gray-400">{report.report}</TableCell>
-                <TableCell className="text-gray-400">
-                  {report.timeStamp?.toDate().toLocaleString() || "N/A"}
-                </TableCell>
-                <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-gray-400 hover:text-white"
-                      >
-                        <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Actions</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      align="end"
-                      className="bg-gray-900 text-white"
-                    >
-                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuSeparator className="bg-gray-800" />
-                      <DropdownMenuItem className="flex items-center gap-2 hover:bg-gray-800">
-                        <MessageSquare className="h-4 w-4" /> Reply
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="flex items-center gap-2 hover:bg-gray-800">
-                        <CheckCircle className="h-4 w-4" /> Mark as Resolved
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="flex items-center gap-2 hover:bg-gray-800">
-                        <Trash2 className="h-4 w-4" /> Delete Report
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
+            {reports.map((report) =>
+              report.reportedBy?.map((entry, index) => (
+                <TableRow key={`${report.id}-${index}`}>
+                  <TableCell>{entry.email}</TableCell>
+                  <TableCell>{entry.report}</TableCell>
+                  <TableCell>{entry.status}</TableCell>
+                  <TableCell>
+                    {entry.reply || (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {entry.timestamp?.toDate().toLocaleString() || "N/A"}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => handleReply(report.id, index)}
+                        >
+                          <MessageSquare className="mr-2 h-4 w-4" />
+                          Reply
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => handleApprove(report.id, index)}
+                        >
+                          <CheckCircle className="mr-2 h-4 w-4" />
+                          Mark as Approved
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>
+
+      {/* Reply Modal */}
+      <Dialog open={isReplyModalOpen} onOpenChange={setIsReplyModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reply to Report</DialogTitle>
+          </DialogHeader>
+          <Textarea
+            placeholder="Enter your reply..."
+            value={replyText}
+            onChange={(e) => setReplyText(e.target.value)}
+          />
+          <DialogFooter>
+            <Button
+              variant="secondary"
+              onClick={() => setIsReplyModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button onClick={submitReply}>Send Reply</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
