@@ -3,7 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 import { getDocs, collection, updateDoc, doc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { toast } from "react-hot-toast";
+import { toast, Toaster } from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Loader2 } from "lucide-react";
+import emailjs from "emailjs-com";
 import AdminLayout from "@/components/admin-layout";
 
 const ContactUs = () => {
@@ -59,15 +60,41 @@ const ContactUs = () => {
     const reply = window.prompt("Enter your reply:");
     if (!reply) return;
 
-    const ref = doc(db, "contactMessages", id);
-    try {
-      await updateDoc(ref, { reply });
-      toast.success("Reply sent successfully");
-      fetchContacts();
-    } catch (err) {
-      toast.error("Error sending reply");
-      console.error("Error sending reply:", err);
+    const item = contactList.find((msg) => msg.id === id);
+    if (!item || !item.email) {
+      toast.error("User email not found");
+      return;
     }
+
+    const ref = doc(db, "contactMessages", id);
+
+    startTransition(async () => {
+      try {
+        // 1. Save reply to Firestore
+        await updateDoc(ref, { reply });
+
+        const emailParams = {
+          to_email: item.email.trim(),
+          to_name: item.name || "User",
+          reply: reply,
+          subject: item.subject || "Your Query",
+        };
+        console.log("Sending with params:", emailParams);
+
+        await emailjs.send(
+          "service_z2l532d",
+          "template_1o1n1eo",
+          emailParams,
+          "ubo9EG9J1fvpNTHLf"
+        );
+
+        toast.success("Reply sent and email delivered!");
+        fetchContacts();
+      } catch (err) {
+        toast.error("Error sending reply or updating Firestore");
+        console.error("Reply error:", err);
+      }
+    });
   };
 
   if (loading) {
@@ -80,6 +107,7 @@ const ContactUs = () => {
 
   return (
     <AdminLayout>
+      <Toaster />
       <div className="p-6 space-y-6">
         <div>
           <h1 className="text-3xl font-bold text-primary">Contact Us</h1>
