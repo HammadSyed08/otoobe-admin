@@ -52,6 +52,8 @@ export default function DashboardPage() {
 
   const upcomingEvents = events.filter((e) => e.status === "Upcoming").length;
 
+  console.log(reports[0]?.reportedBy[0]);
+
   if (loading) {
     return (
       <>
@@ -186,22 +188,35 @@ export default function DashboardPage() {
                   key={report.user + report.issue}
                   className="flex items-center justify-between rounded-md border border-gray-800 bg-gray-950 p-3"
                 >
-                  <div>
-                    <div className="font-medium text-white">{report.user}</div>
-                    <div className="text-xs text-gray-400">{report.issue}</div>
-                    <div className="text-xs text-gray-500">{report.date}</div>
-                  </div>
-                  <div
-                    className={`rounded-full px-2 py-1 text-xs font-medium ${
-                      report.status === "New"
-                        ? "bg-red-950 text-red-400"
-                        : report.status === "In Progress"
-                        ? "bg-yellow-950 text-yellow-400"
-                        : "bg-green-950 text-green-400"
-                    }`}
-                  >
-                    {report.status}
-                  </div>
+                  {report.reportedBy.map((reporter, index) => (
+                    <div
+                      className="flex justify-between items-center w-full"
+                      key={index}
+                    >
+                      <div>
+                        <div className="font-medium text-white">
+                          {reporter.email}
+                        </div>
+                        <div className="text-xs text-gray-400">
+                          {reporter.report}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {reporter.timestamp.toDate().toLocaleString()}
+                        </div>
+                      </div>
+                      <div
+                        className={`rounded-full px-2 py-1 text-xs font-medium ${
+                          reporter.status === "pending"
+                            ? "bg-red-950 text-red-400"
+                            : report.status === "approved"
+                            ? "bg-yellow-950 text-yellow-400"
+                            : "bg-green-950 text-green-400"
+                        }`}
+                      >
+                        {reporter.status}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ))}
             </div>

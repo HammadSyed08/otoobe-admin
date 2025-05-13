@@ -8,6 +8,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   BarChart3,
   Calendar,
+  Contact,
   Flag,
   LayoutDashboard,
   LogOut,
@@ -75,6 +76,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       name: "Settings",
       path: "/settings",
       icon: <Settings className="h-5 w-5" />,
+    },
+    {
+      name: "User's queries ",
+      path: "/userQueries",
+      icon: <Contact className="h-5 w-5" />,
     },
   ];
 
