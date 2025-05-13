@@ -14,9 +14,23 @@ import { useEffect, useState } from "react";
 import { getAllUsers } from "./serices";
 import Loader from "@/components/Loader";
 import debounce from "lodash/debounce";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { db } from "@/lib/firebase";
+import { doc, updateDoc } from "firebase/firestore";
 
 export default function UsersPage() {
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -62,6 +76,26 @@ export default function UsersPage() {
     return fullNameMatch || emailMatch || organizationMatch || locationMatch;
   });
 
+  const handleChangeStatus = async (userId: string, status: string) => {
+    try {
+      const docRef = doc(db, "Users", userId);
+      await updateDoc(docRef, {
+        status: status,
+      });
+      const updatedUsers = users.map((user) => {
+        if (user.id === userId) {
+          return { ...user, status: status };
+        }
+        return user;
+      });
+      setUsers(updatedUsers);
+    } catch (error) {
+      console.error("Error changing user status:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="p-40 mx-auto">
@@ -100,6 +134,8 @@ export default function UsersPage() {
               <TableHead className="text-gray-400">Location</TableHead>
               <TableHead className="text-gray-400">Organization</TableHead>
               <TableHead className="text-gray-400">Bio</TableHead>
+              <TableHead className="text-gray-400">Status</TableHead>
+              <TableHead className="text-gray-400">Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -138,6 +174,54 @@ export default function UsersPage() {
                   {user.bio || (
                     <span className="italic text-muted-foreground">No bio</span>
                   )}
+                </TableCell>
+                <TableCell
+                  className={
+                    user.status === "block" ? "text-red-500" : "text-green-500"
+                  }
+                >
+                  {user.status}
+                </TableCell>
+
+                <TableCell className="text-gray-400">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      {user.status === "block" ? (
+                        <Button variant="outline">Unblock user</Button>
+                      ) : (
+                        <Button variant="destructive">Block user</Button>
+                      )}
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>
+                          {user.status === "block"
+                            ? "Unblock this user?"
+                            : "Block this user?"}
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                          {user.status === "block"
+                            ? "This action will unblock the user and they will be able to access their account."
+                            : "This action will block the user and they will not be able to access their account."}
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction asChild>
+                          <Button
+                            onClick={() =>
+                              handleChangeStatus(
+                                user.id,
+                                user.status === "block" ? "active" : "block"
+                              )
+                            }
+                          >
+                            {user.status === "block" ? "Unblock" : "Block"}
+                          </Button>
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </TableCell>
               </TableRow>
             ))}
