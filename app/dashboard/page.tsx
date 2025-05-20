@@ -52,8 +52,6 @@ export default function DashboardPage() {
 
   const upcomingEvents = events.filter((e) => e.status === "Upcoming").length;
 
-  console.log(reports[0]?.reportedBy[0]);
-
   if (loading) {
     return (
       <>

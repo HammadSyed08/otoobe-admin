@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -15,6 +15,7 @@ import {
   Menu,
   Settings,
   User,
+  UserCog,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -38,6 +39,8 @@ import {
 } from "@/components/ui/dialog";
 import { useAuth } from "@/lib/auth-context";
 import { Router } from "next/router";
+import { db } from "@/lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -46,43 +49,85 @@ interface AdminLayoutProps {
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const [userRole, setUserRole] = useState();
+
+  useEffect(() => {
+    if (!user?.email) return;
+
+    const fetchUserData = async () => {
+      try {
+        const docRef = doc(db, "subAdmins", user.email);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setUserRole(docSnap.data());
+        } else {
+          console.log("No such document!");
+        }
+      } catch (error) {
+        console.error("Error fetching user data", error);
+      }
+    };
+
+    fetchUserData();
+  }, [user]);
 
   const routes = [
     {
       name: "Dashboard",
       path: "/dashboard",
       icon: <LayoutDashboard className="h-5 w-5" />,
+      roles: ["admin"], // only for full admin
     },
     {
       name: "Users",
       path: "/users",
       icon: <User className="h-5 w-5" />,
+      roles: ["admin"],
     },
     {
       name: "Events",
       path: "/events",
       icon: <Calendar className="h-5 w-5" />,
+      roles: ["admin", "subAdmin"], // visible to both
     },
     {
       name: "Reports",
       path: "/reports",
       icon: <Flag className="h-5 w-5" />,
+      roles: ["admin"],
     },
-
     {
       name: "Settings",
       path: "/settings",
       icon: <Settings className="h-5 w-5" />,
+      roles: ["admin"],
     },
     {
-      name: "User's queries ",
+      name: "User's queries",
       path: "/userQueries",
       icon: <Contact className="h-5 w-5" />,
+      roles: ["admin"],
+    },
+    {
+      name: "Sub-Admins",
+      path: "/admin",
+      icon: <UserCog className="h-5 w-5" />,
+      roles: ["admin"],
     },
   ];
+
+  const filteredItems =
+    userRole?.role === "admin"
+      ? routes // show all items
+      : routes.filter((item) => {
+          if (item.roles) {
+            return item.roles.includes(userRole?.role);
+          }
+          return true; // show if no restriction
+        });
 
   const isActive = (path: string) => {
     return pathname === path;
@@ -118,7 +163,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             </div>
             <nav className="flex-1 overflow-auto py-4">
               <ul className="grid gap-1 px-2">
-                {routes.map((route) => (
+                {filteredItems.map((route) => (
                   <li key={route.path}>
                     <Link
                       href={route.path}
@@ -175,7 +220,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         </div>
         <nav className="flex-1 overflow-auto py-4">
           <ul className="grid gap-1 px-2">
-            {routes.map((route) => (
+            {filteredItems.map((route) => (
               <li key={route.path}>
                 <Link
                   href={route.path}
