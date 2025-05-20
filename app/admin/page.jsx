@@ -23,7 +23,7 @@ import {
 } from "firebase/firestore";
 import app from "@/lib/firebase";
 // import { useLanguage } from "@/lib/i18n/language-context";
-import secondaryAuth from "@/lib/firebaseAdmin";
+import secondaryAuth from "@/lib/firebaseadmin";
 import AdminLayout from "@/components/admin-layout";
 import { Eye, EyeOff, Trash2, Loader2 } from "lucide-react";
 
