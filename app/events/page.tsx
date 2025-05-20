@@ -117,12 +117,12 @@ function EventCard({ event }: { event: any }) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const formattedDate = event.date?.seconds
-    ? format(
-        new Timestamp(event.date.seconds, event.date.nanoseconds).toDate(),
-        "PPP"
-      )
-    : "No Date";
+  // const formattedDate = event.eventDate?.start
+  //   ? format(
+  //       new Timestamp(event.eventDate.start, event.eventDate.start).toDate(),
+  //       "PPP"
+  //     )
+  //   : "No Date";
 
   const handleDelete = async () => {
     try {
@@ -194,7 +194,9 @@ function EventCard({ event }: { event: any }) {
           <div className="space-y-2 text-sm text-zinc-400">
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-zinc-500" />
-              <span>{formattedDate}</span>
+              <span>
+                {event.eventDate?.start.toDate().toLocaleDateString()}
+              </span>
             </div>
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-zinc-500" />
@@ -234,7 +236,9 @@ function EventCard({ event }: { event: any }) {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm font-semibold">Date</p>
-                  <p className="text-sm text-gray-500">{formattedDate}</p>
+                  <p className="text-sm text-gray-500">
+                    {event.eventDate?.start.toDate().toLocaleDateString()}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm font-semibold">Time</p>

@@ -24,6 +24,7 @@ export default function CreateEventPage() {
     title: "",
     description: "",
     date: "",
+    endDate: "",
     startTime: "",
     endTime: "",
     city: "",
@@ -45,7 +46,6 @@ export default function CreateEventPage() {
   ) => {
     const { name, value } = e.target;
 
-    // Reset subCategory if category changes
     if (name === "category") {
       setFormData({ ...formData, [name]: value, subCategory: "" });
     } else {
@@ -78,36 +78,41 @@ export default function CreateEventPage() {
         moreInfoLink,
         category,
         subCategory,
+        endDate,
       } = formData;
 
       const eventData = {
-        title,
-        description,
-        date: Timestamp.fromDate(new Date(date)),
-        time: {
-          startTime,
-          endTime,
-          timeStamp: Timestamp.now(),
-        },
-        location: {
-          city,
-          country,
-          latitude: 29.3737609, // placeholder for now
-          longitude: 71.761516, // placeholder for now
-        },
-        price: {
-          amount: price,
-          currency,
-        },
-        ticketLink,
-        moreInfoLink,
-        createdBy: user?.email || "unknown",
         category: [
           {
             title: category,
             subCategories: [subCategory],
           },
         ],
+        createdBy: user?.email || "unknown",
+        eventDate: {
+          start: Timestamp.fromDate(new Date(date)),
+          end: Timestamp.fromDate(new Date(endDate)),
+        },
+        description,
+        location: {
+          city,
+          country,
+          latitude: 29.3737609,
+          longitude: 71.761516,
+        },
+        moreInfoLink,
+        price: {
+          currency,
+          start: price,
+          end: "",
+        },
+        ticketLink,
+        time: {
+          startTime,
+          endTime,
+        },
+        timeStamp: Timestamp.now(),
+        title,
       };
 
       const docId = await eventService.createEvent(eventData, imageFile);
@@ -117,21 +122,6 @@ export default function CreateEventPage() {
         description: `Event ID: ${docId}`,
       });
 
-      setFormData({
-        title: "",
-        description: "",
-        date: "",
-        startTime: "",
-        endTime: "",
-        city: "",
-        country: "",
-        price: "",
-        currency: "",
-        ticketLink: "",
-        moreInfoLink: "",
-        category: "",
-        subCategory: "",
-      });
       setImageFile(null);
       router.push("/events");
     } catch (error) {
@@ -148,7 +138,7 @@ export default function CreateEventPage() {
   return (
     <Card className="max-w-4xl mx-auto my-10 bg-gray-950 shadow-md">
       <CardContent className="p-6 space-y-6">
-        <h2 className="text-2xl font-semibold text-gray-800">
+        <h2 className="text-2xl font-semibold text-gray-100">
           Create New Event
         </h2>
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -174,11 +164,21 @@ export default function CreateEventPage() {
           </div>
           <div className="flex gap-4">
             <div className="flex-1">
-              <Label>Date</Label>
+              <Label>Start Date</Label>
               <Input
                 type="date"
                 name="date"
                 value={formData.date}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="flex-1">
+              <Label>End Date</Label>
+              <Input
+                type="date"
+                name="endDate"
+                value={formData.endDate}
                 onChange={handleChange}
                 required
               />

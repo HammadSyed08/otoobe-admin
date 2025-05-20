@@ -32,7 +32,7 @@ export const eventService = {
     await deleteObject(imageRef);
   },
 
-  // Create new event
+
   async createEvent(eventData: Event, imageFile: File | null): Promise<string> {
     try {
       let imageUrl = '';
@@ -42,7 +42,7 @@ export const eventService = {
 
       const eventRef = await addDoc(collection(db, 'Events'), {
         ...eventData,
-        imageUrl,
+        images: [imageUrl],
         createdAt: new Date().toISOString(),
       });
 
@@ -100,5 +100,5 @@ export const eventService = {
     }
   },
 
- 
+
 };
