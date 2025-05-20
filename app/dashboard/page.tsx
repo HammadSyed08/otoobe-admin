@@ -146,7 +146,7 @@ export default function DashboardPage() {
                   <div>
                     <div className="font-medium text-white">{event.title}</div>
                     <div className="text-xs text-gray-400">
-                      {event.date.toDate().toLocaleString()}
+                      {/* {event.date.toDate().toLocaleString()} */}
                     </div>
                   </div>
                   <div>
