@@ -14,6 +14,7 @@ import {
   LogOut,
   Menu,
   Settings,
+  SquareStack,
   User,
   UserCog,
 } from "lucide-react";
@@ -115,6 +116,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       name: "Sub-Admins",
       path: "/admin",
       icon: <UserCog className="h-5 w-5" />,
+      roles: ["admin"],
+    },
+    {
+      name: "Category",
+      path: "/category",
+      icon: <SquareStack className="h-5 w-5" />,
       roles: ["admin"],
     },
   ];

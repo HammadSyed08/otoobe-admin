@@ -5,7 +5,6 @@ import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getAnalytics, isSupported } from "firebase/analytics";
 
-// Firebase config from environment variables
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN!,
@@ -16,15 +15,11 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID!,
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
-
-// Services
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-// Optional: Initialize analytics if supported
 let analytics: ReturnType<typeof getAnalytics> | null = null;
 isSupported().then((supported: boolean) => {
   if (supported) {
@@ -32,5 +27,4 @@ isSupported().then((supported: boolean) => {
   }
 });
 
-// Export everything
 export { app, auth, db, storage, analytics };

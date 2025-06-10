@@ -39,12 +39,15 @@ export const eventService = {
       if (imageFile) {
         imageUrl = await this.uploadImage(imageFile);
       }
-
+      console.log(imageFile)
       const eventRef = await addDoc(collection(db, 'Events'), {
         ...eventData,
-        images: [imageUrl],
-        createdAt: new Date().toISOString(),
+        images: imageUrl ? [imageUrl] : [], // Override the empty array if image exists
+        docId: "", // Placeholder, will be updated
       });
+
+      // Update docId in the same document
+      await updateDoc(eventRef, { docId: eventRef.id });
 
       return eventRef.id;
     } catch (error) {
