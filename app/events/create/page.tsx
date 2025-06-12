@@ -11,7 +11,7 @@ import { Loader2 } from "lucide-react";
 import { eventService } from "../services";
 import { useAuth } from "@/lib/auth-context";
 import { useRouter } from "next/navigation";
-import { db } from "@/lib/firebase"; // adjust import to your firebase config
+import { db } from "@/lib/firebase";
 import {
   collection,
   getDocs,
@@ -21,6 +21,13 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { Timestamp } from "firebase/firestore";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function CreateEventPage() {
   const { toast } = useToast();
@@ -98,9 +105,7 @@ export default function CreateEventPage() {
     }
   };
 
-  // Dummy geocode function (replace with real one)
   async function geocode(city: string, country: string) {
-    // Replace with real geocoding logic
     return { latitude: 0, longitude: 0 };
   }
 
@@ -192,6 +197,29 @@ export default function CreateEventPage() {
     }
   };
 
+  const SubCategorySelect = ({ subCategories, value, onChange }) => {
+    return (
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder="Select Category" />
+        </SelectTrigger>
+        <SelectContent>
+          {subCategories.map((sub) => (
+            <SelectItem key={sub.id} value={sub.id}>
+              <div className="flex items-center gap-2">
+                <img
+                  src={sub.imageUrl}
+                  alt={sub.name}
+                  className="w-4 h-4 rounded object-cover"
+                />
+                <span>{sub.name}</span>
+              </div>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    );
+  };
   return (
     <Card className="max-w-4xl mx-auto my-10 bg-gray-950 shadow-md">
       <CardContent className="p-6 space-y-6">
@@ -327,21 +355,14 @@ export default function CreateEventPage() {
           </div>
           <div className="flex gap-4">
             <div className="flex-1">
-              <Label>Category</Label>
-              <select
-                name="category"
+              <label htmlFor="">Category</label>
+              <SubCategorySelect
+                subCategories={categories}
                 value={formData.category}
-                onChange={handleChange}
-                className="w-full border rounded px-3 py-2 "
-                required
-              >
-                <option value="">Select category</option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
+                onChange={(val) =>
+                  setFormData({ ...formData, subCategory: val })
+                }
+              />
             </div>
             <div className="flex-1">
               <Label>Subcategory</Label>
