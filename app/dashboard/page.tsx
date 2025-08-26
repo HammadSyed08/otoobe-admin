@@ -136,9 +136,9 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {events.map((event) => (
+              {events.map((event, index) => (
                 <div
-                  key={event.name}
+                  key={index}
                   className="flex items-center justify-between rounded-md border border-gray-800 bg-gray-950 p-3"
                 >
                   <div>
@@ -191,7 +191,7 @@ export default function DashboardPage() {
                   key={report.user + report.issue}
                   className="flex items-center justify-between rounded-md border border-gray-800 bg-gray-950 p-3"
                 >
-                  {report.reportedBy.map((reporter, index) => (
+                  {report.reportedBy.map((reporter: any, index: number ) => (
                     <div
                       className="flex justify-between items-center w-full"
                       key={index}

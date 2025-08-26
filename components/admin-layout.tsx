@@ -39,7 +39,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useAuth } from "@/lib/auth-context";
-import { Router } from "next/router";
+// import { Router } from "next/router";
 import { db } from "@/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
 
@@ -74,6 +74,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
     fetchUserData();
   }, [user]);
+  console.log('This is role',userRole);
 
   const routes = [
     {
