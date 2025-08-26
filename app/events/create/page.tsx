@@ -92,10 +92,17 @@ export default function CreateEventPage() {
     >
   ) => {
     const { name, value } = e.target;
-    if (name === "category") {
-      setFormData({ ...formData, [name]: value, subCategory: "" });
+    let newValue = value;
+
+    if (name === 'ticketLink' || name === 'moreInfoLink') {
+      newValue = value.startsWith('http') ? value : value;
+      // don't force prepend while typing, just store raw
+    }
+
+    if (name === 'category') {
+      setFormData({ ...formData, [name]: newValue, subCategory: '' });
     } else {
-      setFormData({ ...formData, [name]: value });
+      setFormData({ ...formData, [name]: newValue });
     }
   };
 
@@ -107,6 +114,14 @@ export default function CreateEventPage() {
 
   async function geocode(city: string, country: string) {
     return { latitude: 0, longitude: 0 };
+  }
+
+  function normalizeUrl(url: string): string {
+    if (!url) return '';
+    if (!/^https?:\/\//i.test(url)) {
+      return `https://${url}`;
+    }
+    return url;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -143,15 +158,15 @@ export default function CreateEventPage() {
       const eventData = {
         category: [
           {
-            title: categoryObj?.name || "",
-            subCategories: [subCategoryObj?.name || ""],
+            title: categoryObj?.name || '',
+            subCategories: [subCategoryObj?.name || ''],
           },
         ],
-        createdBy: user?.email || "unknown",
+        createdBy: user?.email || 'unknown',
         description,
         eventDate: {
           end: Timestamp.fromDate(new Date(endDate)),
-          start: Timestamp.fromDate(new Date(endDate)),
+          start: Timestamp.fromDate(new Date(date)), // fixed to use "date" not endDate
         },
         images: [],
         location: {
@@ -160,13 +175,13 @@ export default function CreateEventPage() {
           latitude,
           longitude,
         },
-        moreInfoLink,
+        moreInfoLink: normalizeUrl(moreInfoLink),
         price: {
           currency,
-          end: "",
-          start: "",
+          end: '',
+          start: '',
         },
-        ticketLink,
+        ticketLink: normalizeUrl(ticketLink),
         time: {
           endTime,
           startTime,
