@@ -29,6 +29,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+type SubCategory = {
+  id: string;
+  name: string;
+  imageUrl: string;
+};
+
+interface SubCategorySelectProps {
+  subCategories: SubCategory[];
+  value: string;
+  onChange: (value: string) => void;
+}
+
 export default function CreateEventPage() {
   const { toast } = useToast();
   const { user } = useAuth();
@@ -212,20 +224,24 @@ export default function CreateEventPage() {
     }
   };
 
-  const SubCategorySelect = ({ subCategories, value, onChange }) => {
+  const SubCategorySelect: React.FC<SubCategorySelectProps> = ({
+    subCategories,
+    value,
+    onChange,
+  }) => {
     return (
       <Select value={value} onValueChange={onChange}>
-        <SelectTrigger className="w-full">
-          <SelectValue placeholder="Select Category" />
+        <SelectTrigger className='w-full'>
+          <SelectValue placeholder='Select Category' />
         </SelectTrigger>
         <SelectContent>
           {subCategories.map((sub) => (
             <SelectItem key={sub.id} value={sub.id}>
-              <div className="flex items-center gap-2">
+              <div className='flex items-center gap-2'>
                 <img
                   src={sub.imageUrl}
                   alt={sub.name}
-                  className="w-4 h-4 rounded object-cover"
+                  className='w-4 h-4 rounded object-cover'
                 />
                 <span>{sub.name}</span>
               </div>

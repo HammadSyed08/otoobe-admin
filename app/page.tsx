@@ -37,7 +37,7 @@ export default function LoginPage() {
         title: "Login Successful",
         description: "Redirecting to dashboard...",
       });
-      router.push("/events");
+      router.push("/dashboard");
     } catch (error: any) {
       toast({
         variant: "destructive",
