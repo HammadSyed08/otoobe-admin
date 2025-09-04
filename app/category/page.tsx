@@ -304,7 +304,7 @@ const CategoryPage = () => {
 
   return (
     <AdminLayout>
-      <div className="max-w-3xl mx-auto space-y-8 py-8">
+      <div className='max-w-3xl mx-auto space-y-8 py-8'>
         <Card>
           <CardHeader>
             <CardTitle>Categories</CardTitle>
@@ -315,61 +315,61 @@ const CategoryPage = () => {
                 e.preventDefault();
                 editingCategory ? handleUpdateCategory() : handleAddCategory();
               }}
-              className="flex gap-2 items-end"
+              className='flex gap-2 items-end'
             >
-              <div className="flex-1">
-                <Label htmlFor="categoryName">Category name</Label>
+              <div className='flex-1'>
+                <Label htmlFor='categoryName'>Category name</Label>
                 <Input
-                  id="categoryName"
-                  type="text"
-                  placeholder="Category name"
+                  id='categoryName'
+                  type='text'
+                  placeholder='Category name'
                   value={categoryName}
                   onChange={(e) => setCategoryName(e.target.value)}
-                  className="mt-1"
+                  className='mt-1'
                 />
               </div>
-              <Button type="submit" className="whitespace-nowrap">
-                {editingCategory ? "Update" : "Add"}
+              <Button type='submit' className='whitespace-nowrap'>
+                {editingCategory ? 'Update' : 'Add'}
               </Button>
               {editingCategory && (
                 <Button
-                  type="button"
-                  variant="secondary"
+                  type='button'
+                  variant='secondary'
                   onClick={() => {
                     setEditingCategory(null);
-                    setCategoryName("");
+                    setCategoryName('');
                   }}
                 >
                   Cancel
                 </Button>
               )}
             </form>
-            <ul className="mt-6 space-y-2">
+            <ul className='mt-6 space-y-2'>
               {categories.map((cat) => (
                 <li
                   key={cat.id}
                   className={`flex items-center justify-between rounded px-4 py-3 ${
                     selectedCategoryId === cat.id
-                      ? "bg-muted font-semibold"
-                      : "bg-muted/50"
+                      ? 'bg-muted font-semibold'
+                      : 'bg-muted/50'
                   }`}
                 >
-                  <div className="flex items-center gap-4 flex-1">
-                    <div className="relative   rounded-md overflow-hidden  ">
+                  <div className='flex items-center gap-4 flex-1'>
+                    <div className='relative   rounded-md overflow-hidden  '>
                       {isUploading && cat.id === selectedCategoryId ? (
-                        <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                          <span className="text-xs">Uploading...</span>
+                        <div className='w-full h-full bg-gray-200 flex items-center justify-center'>
+                          <span className='text-xs'>Uploading...</span>
                         </div>
                       ) : (
-                        <div className="flex justify-between gap-3">
+                        <div className='flex justify-between gap-3'>
                           <img
                             src={cat.imageUrl || DEFAULT_CATEGORY_IMAGE}
                             alt={cat.name}
-                            className="w-12 h-12 object-cover "
+                            className='w-12 h-12 object-cover '
                           />
                           <input
-                            type="file"
-                            accept="image/*"
+                            type='file'
+                            accept='image/*'
                             onChange={(e) => {
                               if (e.target.files?.[0]) {
                                 handleImageUpload(e.target.files[0], cat.id);
@@ -380,46 +380,46 @@ const CategoryPage = () => {
                       )}
                     </div>
                     <span
-                      className="cursor-pointer"
+                      className='cursor-pointer'
                       onClick={() => setSelectedCategoryId(cat.id)}
                     >
                       {cat.name}
                     </span>
                   </div>
-                  <div className="flex gap-2">
+                  <div className='flex gap-2'>
                     <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-8 w-8 p-0"
-                      onClick={() => moveCategory(cat.id, "up")}
+                      size='sm'
+                      variant='outline'
+                      className='h-8 w-8 p-0'
+                      onClick={() => moveCategory(cat.id, 'up')}
                       disabled={
                         categories.findIndex((c) => c.id === cat.id) === 0
                       }
                     >
-                      <ArrowUp className="h-4 w-4" />
+                      <ArrowUp className='h-4 w-4' />
                     </Button>
                     <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-8 w-8 p-0"
-                      onClick={() => moveCategory(cat.id, "down")}
+                      size='sm'
+                      variant='outline'
+                      className='h-8 w-8 p-0'
+                      onClick={() => moveCategory(cat.id, 'down')}
                       disabled={
                         categories.findIndex((c) => c.id === cat.id) ===
                         categories.length - 1
                       }
                     >
-                      <ArrowDown className="h-4 w-4" />
+                      <ArrowDown className='h-4 w-4' />
                     </Button>
                     <Button
-                      size="sm"
-                      variant="outline"
+                      size='sm'
+                      variant='outline'
                       onClick={() => handleEditCategory(cat)}
                     >
                       Edit
                     </Button>
                     <Button
-                      size="sm"
-                      variant="destructive"
+                      size='sm'
+                      variant='destructive'
                       onClick={() => handleDeleteCategory(cat.id)}
                     >
                       Delete
@@ -443,73 +443,73 @@ const CategoryPage = () => {
                   ? handleUpdateSubCategory()
                   : handleAddSubCategory();
               }}
-              className="flex flex-col md:flex-row gap-2 items-end"
+              className='flex flex-col md:flex-row gap-2 items-end'
             >
-              <div className="w-full md:w-1/3">
-                <Label htmlFor="categorySelect">Category</Label>
+              <div className='w-full md:w-1/3'>
+                <Label htmlFor='categorySelect'>Category</Label>
                 <Select
                   value={selectedCategoryId}
                   onValueChange={setSelectedCategoryId}
                 >
-                  <SelectTrigger id="categorySelect" className="mt-1">
-                    <SelectValue placeholder="Select Category" />
+                  <SelectTrigger id='categorySelect' className='mt-1'>
+                    <SelectValue placeholder='Select Category' />
                   </SelectTrigger>
                   <SelectContent>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.id}>
+                    {categories.map((cat, index) => (
+                      <SelectItem key={index} value={cat.id}>
                         {cat.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-              <div className="w-full md:w-1/3">
-                <Label htmlFor="subCategoryName">SubCategory name</Label>
+              <div className='w-full md:w-1/3'>
+                <Label htmlFor='subCategoryName'>SubCategory name</Label>
                 <Input
-                  id="subCategoryName"
-                  type="text"
-                  placeholder="SubCategory name"
+                  id='subCategoryName'
+                  type='text'
+                  placeholder='SubCategory name'
                   value={subCategoryName}
                   onChange={(e) => setSubCategoryName(e.target.value)}
-                  className="mt-1"
+                  className='mt-1'
                 />
               </div>
-              <Button type="submit" className="whitespace-nowrap">
-                {editingSubCategory ? "Update" : "Add"}
+              <Button type='submit' className='whitespace-nowrap'>
+                {editingSubCategory ? 'Update' : 'Add'}
               </Button>
               {editingSubCategory && (
                 <Button
-                  type="button"
-                  variant="secondary"
+                  type='button'
+                  variant='secondary'
                   onClick={() => {
                     setEditingSubCategory(null);
-                    setSubCategoryName("");
+                    setSubCategoryName('');
                   }}
                 >
                   Cancel
                 </Button>
               )}
             </form>
-            <ul className="mt-6 space-y-2">
+            <ul className='mt-6 space-y-2'>
               {subCategories
                 .filter((sub) => sub.categoryId === selectedCategoryId)
                 .map((sub) => (
                   <li
                     key={sub.id}
-                    className="flex items-center justify-between rounded px-4 py-3 bg-muted/50"
+                    className='flex items-center justify-between rounded px-4 py-3 bg-muted/50'
                   >
-                    <span className="flex-1">{sub.name}</span>
-                    <div className="flex gap-2">
+                    <span className='flex-1'>{sub.name}</span>
+                    <div className='flex gap-2'>
                       <Button
-                        size="sm"
-                        variant="outline"
+                        size='sm'
+                        variant='outline'
                         onClick={() => handleEditSubCategory(sub)}
                       >
                         Edit
                       </Button>
                       <Button
-                        size="sm"
-                        variant="destructive"
+                        size='sm'
+                        variant='destructive'
                         onClick={() => handleDeleteSubCategory(sub.id)}
                       >
                         Delete
